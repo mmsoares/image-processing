@@ -25,6 +25,7 @@ public class ImageTransformer {
 
     /**
      * Mirrors an image vertically
+     *
      * @param originalImage original image to be mirrored
      * @return image mirrored vertically
      */
@@ -43,6 +44,7 @@ public class ImageTransformer {
 
     /**
      * Mirrors an image horizontally
+     *
      * @param originalImage original image to be mirrored
      * @return image mirrored horizontally
      */
