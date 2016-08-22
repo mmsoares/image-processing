@@ -32,7 +32,7 @@ Convert a colored image to shades of gray (luminance).
 An image in shaded of gray might be obtained from a colored image by applying the following
 formula to each pixel of the original image:
 
->L = 0.299*R + 0.587*G + 0.114*B,
+>L = 0.299R + 0.587G + 0.114B,
 
 Where R, G and B are the color components of the original pixel.
 

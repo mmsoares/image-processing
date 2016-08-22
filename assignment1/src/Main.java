@@ -11,7 +11,8 @@ public class Main {
             for (Images imageEnum : Images.values()) {
                 String fileName = imageEnum.getFileName();
                 BufferedImage image = JPEGHandler.readImage(SAMPLES_LOCATION + fileName);
-                JPEGHandler.writeImage(image, OUTPUT_LOCATION + fileName);
+                BufferedImage result = ImageTransformer.mirrorHorizontally(image);
+                JPEGHandler.writeImage(result, OUTPUT_LOCATION + fileName);
             }
         } catch (IOException e) {
             e.printStackTrace();
