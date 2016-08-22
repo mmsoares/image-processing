@@ -62,6 +62,32 @@ public class ImageTransformer {
     }
 
     /**
+     * Quantize an image into a certain amount of shades of gray.
+     * In case the image passed is not in shades of gray, it will be converted prior to the quantization.
+     *
+     * @param originalImage the original image to be quantized
+     * @param shades        number of shades of gray to quantize the image
+     * @return image quantized in <code>shades</code> shades of gray
+     */
+    public static BufferedImage quantizeImage(BufferedImage originalImage, int shades) {
+        BufferedImage resultImage = getSizedImageForTransformation(originalImage);
+
+        for (int i = 0; i < originalImage.getWidth(); i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                int luminance = new FPIColor(originalImage.getRGB(i, j)).paintItGray().getRed();
+                int quantizedLuminance = getQuantizedLuminance(shades, luminance);
+                resultImage.setRGB(i, j, new Color(quantizedLuminance, quantizedLuminance, quantizedLuminance).getRGB());
+            }
+        }
+
+        return resultImage;
+    }
+
+    private static int getQuantizedLuminance(int shades, int luminance) {
+        return (int) ((float) shades * luminance / 255f);
+    }
+
+    /**
      * Returns a blank image from the same dimensions of the image passed as parameter to be used in a transformation
      *
      * @param originalImage Original image
