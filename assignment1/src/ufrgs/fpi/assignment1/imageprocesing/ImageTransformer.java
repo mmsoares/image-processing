@@ -1,3 +1,4 @@
+package ufrgs.fpi.assignment1.imageprocesing;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
@@ -84,7 +85,7 @@ public class ImageTransformer {
     }
 
     private static int getQuantizedLuminance(int shades, int luminance) {
-        return (int) ((float) shades * luminance / 255f);
+        return (int) ((float) shades * luminance / 255f);    //casts are needed to prevent truncation from always making the result equal to 0
     }
 
     /**

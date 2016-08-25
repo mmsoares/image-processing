@@ -1,3 +1,5 @@
+package ufrgs.fpi.assignment1.imageprocesing;
+
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageDecoder;
 

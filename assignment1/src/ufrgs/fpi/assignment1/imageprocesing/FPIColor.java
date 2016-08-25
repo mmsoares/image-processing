@@ -1,7 +1,9 @@
+package ufrgs.fpi.assignment1.imageprocesing;
+
 import java.awt.Color;
 
-public class FPIColor extends Color {
-    public FPIColor(int r, int g, int b) {
+class FPIColor extends Color {
+    private FPIColor(int r, int g, int b) {
         super(r, g, b);
     }
 

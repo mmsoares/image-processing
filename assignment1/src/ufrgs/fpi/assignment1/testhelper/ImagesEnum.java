@@ -1,4 +1,6 @@
-enum Images {
+package ufrgs.fpi.assignment1.testhelper;
+
+enum ImagesEnum {
     GRAMADO_22K("Gramado_22k.jpg"),
     GRAMADO_72K("Gramado_72k.jpg"),
     SPACE_46K("Space_46k.jpg"),
@@ -7,7 +9,7 @@ enum Images {
 
     private final String fileName;
 
-    Images(String fileName) {
+    ImagesEnum(String fileName) {
         this.fileName = fileName;
     }
 
