@@ -1,4 +1,5 @@
 package ufrgs.fpi.assignment1.imageprocesing;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
@@ -15,7 +16,6 @@ public class ImageTransformer {
 
         for (int i = 0; i < originalImage.getWidth(); i++) {
             for (int j = 0; j < originalImage.getHeight(); j++) {
-
                 Color color = new FPIColor(originalImage.getRGB(i, j)).paintItGray();
                 resultImage.setRGB(i, j, color.getRGB());
             }
