@@ -14,34 +14,19 @@ import java.util.stream.IntStream;
 
 import static javax.swing.JOptionPane.*;
 
-class Runner extends JFrame {
+class Main extends JFrame {
     private static final int WIDTH = 1200;
     private static final int HEIGHT = 600;
-
     private static final int PICTURE_PANE_WIDTH = (int) (WIDTH * 0.425);
     private static final int BUTTONS_PANE_WIDTH = (int) (WIDTH * 0.15);
 
-    private JPanel originalImagePanel;
-    private JPanel resultImagePanel;
-    private JPanel buttonsPanel;
-
-    private JButton uploadImageButton;
-    private JButton verticalMirrorButton;
-    private JButton horizontalMirrorButton;
-    private JButton shadesOfGrayButton;
-    private JButton quantizationButton;
-    private JButton restoreOriginal;
-    private JButton saveButton;
-
+    private JPanel originalImagePanel, resultImagePanel, buttonsPanel;
+    private JButton uploadImageButton, verticalMirrorButton, horizontalMirrorButton, shadesOfGrayButton, quantizationButton, restoreOriginal, saveButton;
     private JSpinner shadesSpinner;
+    private JLabel originalImageJLabel, resultImageJLabel;
+    private BufferedImage originalImage, resultImage;
 
-    private JLabel originalImageJLabel;
-    private JLabel resultImageJLabel;
-
-    private BufferedImage originalImage;
-    private BufferedImage resultImage;
-
-    private Runner() {
+    private Main() {
         JPanel topPanel = initTopPanel();
         createContentPanels();
         createSplitterPanes(topPanel);
@@ -60,6 +45,80 @@ class Runner extends JFrame {
         createModifiedImagePanel();
         createButtonsPanel();
         addOnClickHandlersToButtons();
+    }
+
+    private void createOriginalImagePanel() {
+        originalImagePanel = new JPanel();
+        originalImagePanel.setLayout(new BorderLayout());
+        originalImagePanel.setPreferredSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
+        originalImagePanel.setMinimumSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
+    }
+
+    private void createModifiedImagePanel() {
+        resultImagePanel = new JPanel();
+        resultImagePanel.setLayout(new BorderLayout());
+        resultImagePanel.setPreferredSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
+        resultImagePanel.setMinimumSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
+    }
+
+    private void createButtonsPanel() {
+        buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new FlowLayout());
+
+        initShadesSpinner();
+        initButtons();
+        disableButtons();
+        addButtonsToPanel();
+
+        buttonsPanel.setPreferredSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+        buttonsPanel.setMinimumSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+    }
+
+    private void initShadesSpinner() {
+        shadesSpinner = new JSpinner(buildSpinnerListModel());
+        setSpinnerSize();
+    }
+
+    private SpinnerListModel buildSpinnerListModel() {
+        List<Integer> range = IntStream.range(1, 255 + 1).boxed().collect(Collectors.toList());
+        return new SpinnerListModel(range);
+    }
+
+    private void setSpinnerSize() {
+        Component spinnerEditor = shadesSpinner.getEditor();
+        JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
+        textField.setColumns(3);
+    }
+
+    private void initButtons() {
+        uploadImageButton = new JButton("Upload de imagem");
+        verticalMirrorButton = new JButton("Espelhamento vertical");
+        horizontalMirrorButton = new JButton("Espelhamento horizontal");
+        shadesOfGrayButton = new JButton("Tons de cinza");
+        quantizationButton = new JButton("Quantização");
+        restoreOriginal = new JButton("Restaurar original");
+        saveButton = new JButton("Salvar resultado");
+    }
+
+    private void disableButtons() {
+        verticalMirrorButton.setEnabled(false);
+        horizontalMirrorButton.setEnabled(false);
+        shadesOfGrayButton.setEnabled(false);
+        quantizationButton.setEnabled(false);
+        shadesSpinner.setEnabled(false);
+        restoreOriginal.setEnabled(false);
+        saveButton.setEnabled(false);
+    }
+
+    private void addButtonsToPanel() {
+        buttonsPanel.add(uploadImageButton);
+        buttonsPanel.add(verticalMirrorButton);
+        buttonsPanel.add(horizontalMirrorButton);
+        buttonsPanel.add(shadesOfGrayButton);
+        buttonsPanel.add(quantizationButton);
+        buttonsPanel.add(shadesSpinner);
+        buttonsPanel.add(restoreOriginal);
+        buttonsPanel.add(saveButton);
     }
 
     private void addOnClickHandlersToButtons() {
@@ -84,6 +143,7 @@ class Runner extends JFrame {
                     refreshOriginalImagePanel();
                     resultImage = originalImage;
                     refreshResultImagePanel();
+                    enableButtons();
                 } catch (IOException ioException) {
                     showMessageDialog(null, "Um erro ocorreu. Não foi possível carregar a imagem.");
                     ioException.printStackTrace();
@@ -159,6 +219,16 @@ class Runner extends JFrame {
         });
     }
 
+    private void enableButtons() {
+        verticalMirrorButton.setEnabled(true);
+        horizontalMirrorButton.setEnabled(true);
+        shadesOfGrayButton.setEnabled(true);
+        quantizationButton.setEnabled(true);
+        shadesSpinner.setEnabled(true);
+        restoreOriginal.setEnabled(true);
+        saveButton.setEnabled(true);
+    }
+
     private void refreshOriginalImagePanel() {
         if (originalImageJLabel != null) {
             originalImagePanel.remove(originalImageJLabel);
@@ -201,70 +271,7 @@ class Runner extends JFrame {
         setVisible(true);
     }
 
-    private void createOriginalImagePanel() {
-        originalImagePanel = new JPanel();
-        originalImagePanel.setLayout(new BorderLayout());
-        originalImagePanel.setPreferredSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
-        originalImagePanel.setMinimumSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
-    }
-
-    private void createModifiedImagePanel() {
-        resultImagePanel = new JPanel();
-        resultImagePanel.setLayout(new BorderLayout());
-        resultImagePanel.setPreferredSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
-        resultImagePanel.setMinimumSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
-    }
-
-    private void createButtonsPanel() {
-        buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new FlowLayout());
-
-        initShadesSpinner();
-        initButtons();
-        addButtonsToPanel();
-
-        buttonsPanel.setPreferredSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
-        buttonsPanel.setMinimumSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
-    }
-
-    private void initButtons() {
-        uploadImageButton = new JButton("Upload de imagem");
-        verticalMirrorButton = new JButton("Espelhamento vertical");
-        horizontalMirrorButton = new JButton("Espelhamento horizontal");
-        shadesOfGrayButton = new JButton("Tons de cinza");
-        quantizationButton = new JButton("Quantização");
-        restoreOriginal = new JButton("Restaurar original");
-        saveButton = new JButton("Salvar resultado");
-    }
-
-    private void addButtonsToPanel() {
-        buttonsPanel.add(uploadImageButton);
-        buttonsPanel.add(verticalMirrorButton);
-        buttonsPanel.add(horizontalMirrorButton);
-        buttonsPanel.add(shadesOfGrayButton);
-        buttonsPanel.add(quantizationButton);
-        buttonsPanel.add(shadesSpinner);
-        buttonsPanel.add(restoreOriginal);
-        buttonsPanel.add(saveButton);
-    }
-
-    private void initShadesSpinner() {
-        shadesSpinner = new JSpinner(buildSpinnerListModel());
-        setSpinnerSize();
-    }
-
-    private SpinnerListModel buildSpinnerListModel() {
-        List<Integer> range = IntStream.range(1, 255 + 1).boxed().collect(Collectors.toList());
-        return new SpinnerListModel(range);
-    }
-
-    private void setSpinnerSize() {
-        Component spinnerEditor = shadesSpinner.getEditor();
-        JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
-        textField.setColumns(3);
-    }
-
     public static void main(String[] args) {
-        EventQueue.invokeLater(Runner::new);
+        EventQueue.invokeLater(Main::new);
     }
 }
