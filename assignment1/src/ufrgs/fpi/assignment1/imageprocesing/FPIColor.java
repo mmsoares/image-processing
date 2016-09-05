@@ -12,16 +12,29 @@ class FPIColor extends Color {
     }
 
     /**
-     * Turns a colored pixel into shades of gray
+     * Turns a colored pixel into grayscale
      *
-     * @return a new Color in shades of gray
+     * @return a new Color in grayscale
      */
     public Color paintItGray() {
-        int luminance = calculateLuminance(this.getRed(), this.getGreen(), this.getBlue());
-        return new FPIColor(luminance, luminance, luminance);
+        if(isGrayscale()) {
+            return this;
+        }
+        else {
+            int luminance = calculateLuminance(this.getRed(), this.getGreen(), this.getBlue());
+            return new FPIColor(luminance, luminance, luminance);
+        }
     }
 
     private static int calculateLuminance(int red, int green, int blue) {
         return (int) ((0.299 * red) + (0.587 * green) + (0.114 * blue));
+    }
+
+    /**
+     * Checks if a pixel is in grayscale
+     * @return true if the R, G and B components of the pixel have the same value, false otherwise
+     */
+    public boolean isGrayscale() {
+        return this.getBlue() == this.getRed() && this.getRed() == this.getGreen();
     }
 }

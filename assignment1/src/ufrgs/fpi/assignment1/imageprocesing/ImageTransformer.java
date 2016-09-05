@@ -2,16 +2,20 @@ package ufrgs.fpi.assignment1.imageprocesing;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 public class ImageTransformer {
+    private ImageTransformer() {
+        //utility classes should not be instantiated
+    }
 
     /**
-     * Converts a (possibly colored) image into a new one in shades of gray
+     * Converts a (possibly colored) image into a new one in grayscale
      *
      * @param originalImage the possibly colored image
-     * @return new image in shades of gray
+     * @return new image in grayscale
      */
-    public static BufferedImage convertToShadesOfGray(BufferedImage originalImage) {
+    public static BufferedImage convertToGrayscale(BufferedImage originalImage) {
         BufferedImage resultImage = getSizedImageForTransformation(originalImage);
 
         for (int i = 0; i < originalImage.getWidth(); i++) {
@@ -64,7 +68,7 @@ public class ImageTransformer {
 
     /**
      * Quantize an image into a certain amount of shades of gray.
-     * In case the image passed is not in shades of gray, it will be converted prior to the quantization.
+     * In case the image passed is not in grayscale, it will be converted prior to the quantization.
      *
      * @param originalImage the original image to be quantized
      * @param shades        number of shades of gray to quantize the image
@@ -96,5 +100,86 @@ public class ImageTransformer {
      */
     private static BufferedImage getSizedImageForTransformation(BufferedImage originalImage) {
         return new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+    }
+
+    private static int[] calculateHistogram(BufferedImage image) {
+        int[] histogram = new int[256];
+        Arrays.fill(histogram, 0);
+
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                int luminance = new FPIColor(image.getRGB(i, j)).paintItGray().getRed();
+                histogram[luminance] += 1;
+            }
+        }
+
+        return histogram;
+    }
+
+    public static BufferedImage getHistogramAsImage(BufferedImage image) {
+        int[] histogram = calculateHistogram(image);
+        int maxHistogramValue = getMaximum(histogram);
+
+        if (maxHistogramValue > 255) {
+            //normalize the histogram to fit on the window
+            double scalingFactor = 255.0 / maxHistogramValue;
+
+            for (int i = 0; i < 256; i++) {
+                histogram[i] = (int) (histogram[i] * scalingFactor);
+            }
+        }
+
+        return makeImageFromHistogramArray(histogram);
+    }
+
+    private static int getMaximum(int[] array) {
+        int max = 0;
+
+        for (int n : array) {
+            max = Math.max(max, n);
+        }
+
+        return max;
+    }
+
+    private static BufferedImage makeImageFromHistogramArray(int[] histogram) {
+        BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
+
+        for (int i = 0; i < 256; i++) {
+            int columnValue = histogram[i];
+            for (int j = 0; j < 256; j++) {
+                if (j <= columnValue) {
+                    image.setRGB(i, 255 - j, Color.BLACK.getRGB());
+                } else {
+                    image.setRGB(i, 255 - j, Color.WHITE.getRGB());
+                }
+            }
+        }
+
+        return image;
+    }
+
+    public static BufferedImage brightEnhancement(BufferedImage originalImage, int bright) {
+        BufferedImage resultImage = getSizedImageForTransformation(originalImage);
+
+        //fixme this is not working, always makes the picture black. need to figure out why
+
+        for (int i = 0; i < originalImage.getWidth(); i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                Color originalColor = new FPIColor(resultImage.getRGB(i, j)).paintItGray();
+                int enhancedLuminance = originalColor.getGreen() + bright;
+
+                if(enhancedLuminance > 255) {
+                    enhancedLuminance = 255;
+                }
+                else if (enhancedLuminance < 0) {
+                    enhancedLuminance = 0;
+                }
+
+                resultImage.setRGB(i, j, new Color(enhancedLuminance, enhancedLuminance, enhancedLuminance).getRGB());
+            }
+        }
+
+        return resultImage;
     }
 }

@@ -21,8 +21,8 @@ class Main extends JFrame {
     private static final int BUTTONS_PANE_WIDTH = (int) (WIDTH * 0.15);
 
     private JPanel originalImagePanel, resultImagePanel, buttonsPanel;
-    private JButton uploadImageButton, verticalMirrorButton, horizontalMirrorButton, shadesOfGrayButton, quantizationButton, restoreOriginal, saveButton;
-    private JSpinner shadesSpinner;
+    private JButton uploadImageButton, histogramButton, brightEnhancementButton, grayscaleButton, quantizationButton, restoreOriginal, saveButton;
+    private JSpinner shadesSpinner, brightSpinner;
     private JLabel originalImageJLabel, resultImageJLabel;
     private BufferedImage originalImage, resultImage;
 
@@ -66,6 +66,7 @@ class Main extends JFrame {
         buttonsPanel.setLayout(new FlowLayout());
 
         initShadesSpinner();
+        initBrightSpinner();
         initButtons();
         disableButtons();
         addButtonsToPanel();
@@ -75,46 +76,59 @@ class Main extends JFrame {
     }
 
     private void initShadesSpinner() {
-        shadesSpinner = new JSpinner(buildSpinnerListModel());
-        setSpinnerSize();
+        shadesSpinner = new JSpinner(buildSpinnerListModel(1, 255));
+        setShadesSpinnerSize();
     }
 
-    private SpinnerListModel buildSpinnerListModel() {
-        List<Integer> range = IntStream.range(1, 255 + 1).boxed().collect(Collectors.toList());
+    private void initBrightSpinner() {
+        brightSpinner = new JSpinner(buildSpinnerListModel(-255, 255));
+        setBrightSpinnerSize();
+    }
+
+    private SpinnerListModel buildSpinnerListModel(int min, int max) {
+        List<Integer> range = IntStream.range(min, max + 1).boxed().collect(Collectors.toList());
         return new SpinnerListModel(range);
     }
 
-    private void setSpinnerSize() {
+    private void setShadesSpinnerSize() {
         Component spinnerEditor = shadesSpinner.getEditor();
         JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
         textField.setColumns(3);
     }
 
+    private void setBrightSpinnerSize() {
+        Component spinnerEditor = brightSpinner.getEditor();
+        JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
+        textField.setColumns(4);
+    }
+
     private void initButtons() {
         uploadImageButton = new JButton("Upload de imagem");
-        verticalMirrorButton = new JButton("Espelhamento vertical");
-        horizontalMirrorButton = new JButton("Espelhamento horizontal");
-        shadesOfGrayButton = new JButton("Tons de cinza");
+        histogramButton = new JButton("Histograma");
+        brightEnhancementButton = new JButton("   Brilho");
+        grayscaleButton = new JButton("Tons de cinza");
         quantizationButton = new JButton("Quantização");
         restoreOriginal = new JButton("Restaurar original");
         saveButton = new JButton("Salvar resultado");
     }
 
     private void disableButtons() {
-        verticalMirrorButton.setEnabled(false);
-        horizontalMirrorButton.setEnabled(false);
-        shadesOfGrayButton.setEnabled(false);
+        histogramButton.setEnabled(false);
+        brightEnhancementButton.setEnabled(false);
+        grayscaleButton.setEnabled(false);
         quantizationButton.setEnabled(false);
         shadesSpinner.setEnabled(false);
+        brightSpinner.setEnabled(false);
         restoreOriginal.setEnabled(false);
         saveButton.setEnabled(false);
     }
 
     private void addButtonsToPanel() {
         buttonsPanel.add(uploadImageButton);
-        buttonsPanel.add(verticalMirrorButton);
-        buttonsPanel.add(horizontalMirrorButton);
-        buttonsPanel.add(shadesOfGrayButton);
+        buttonsPanel.add(histogramButton);
+        buttonsPanel.add(brightEnhancementButton);
+        buttonsPanel.add(brightSpinner);
+        buttonsPanel.add(grayscaleButton);
         buttonsPanel.add(quantizationButton);
         buttonsPanel.add(shadesSpinner);
         buttonsPanel.add(restoreOriginal);
@@ -123,9 +137,9 @@ class Main extends JFrame {
 
     private void addOnClickHandlersToButtons() {
         addUploadImageButtonOnClick();
-        addVerticalMirrorButtonOnClick();
-        addHorizontalMirrorButtonOnClick();
-        addShadesOfGrayButtonOnClick();
+        addHistogramButtonOnClick();
+        addBrightEnhancementOnClick();
+        addGrayscaleButtonOnClick();
         addQuantizationButtonOnClick();
         addRestoreOriginalButtonOnClick();
         addSaveButtonOnClick();
@@ -133,7 +147,7 @@ class Main extends JFrame {
 
     private void addUploadImageButtonOnClick() {
         uploadImageButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
+            JFileChooser fileChooser = new JFileChooser("C:\\Users\\Matheus\\IdeaProjects\\image-processing\\samples");
             int returnValue = fileChooser.showOpenDialog(uploadImageButton);
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
@@ -152,28 +166,26 @@ class Main extends JFrame {
         });
     }
 
-    private void addVerticalMirrorButtonOnClick() {
-        verticalMirrorButton.addActionListener(e -> {
+    private void addHistogramButtonOnClick() {
+        histogramButton.addActionListener(e -> {
+            resultImage = ImageTransformer.getHistogramAsImage(originalImage);
+            refreshResultImagePanel();
+        });
+    }
+
+    private void addBrightEnhancementOnClick() {
+        brightEnhancementButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.mirrorVertically(resultImage);
+                resultImage = ImageTransformer.brightEnhancement(resultImage, (Integer) shadesSpinner.getValue());
                 refreshResultImagePanel();
             }
         });
     }
 
-    private void addHorizontalMirrorButtonOnClick() {
-        horizontalMirrorButton.addActionListener(e -> {
+    private void addGrayscaleButtonOnClick() {
+        grayscaleButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.mirrorHorizontally(resultImage);
-                refreshResultImagePanel();
-            }
-        });
-    }
-
-    private void addShadesOfGrayButtonOnClick() {
-        shadesOfGrayButton.addActionListener(e -> {
-            if (resultImage != null) {
-                resultImage = ImageTransformer.convertToShadesOfGray(resultImage);
+                resultImage = ImageTransformer.convertToGrayscale(resultImage);
                 refreshResultImagePanel();
             }
         });
@@ -200,8 +212,7 @@ class Main extends JFrame {
     private void addSaveButtonOnClick() {
         saveButton.addActionListener(e -> {
             if (resultImage != null) {
-                JFileChooser fileChooser = new JFileChooser();
-                //fileChooser.se
+                JFileChooser fileChooser = new JFileChooser("C:\\Users\\Matheus\\IdeaProjects\\image-processing\\output");
                 int returnValue = fileChooser.showSaveDialog(saveButton);
 
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
@@ -220,9 +231,10 @@ class Main extends JFrame {
     }
 
     private void enableButtons() {
-        verticalMirrorButton.setEnabled(true);
-        horizontalMirrorButton.setEnabled(true);
-        shadesOfGrayButton.setEnabled(true);
+        histogramButton.setEnabled(true);
+        brightEnhancementButton.setEnabled(true);
+        brightSpinner.setEnabled(true);
+        grayscaleButton.setEnabled(true);
         quantizationButton.setEnabled(true);
         shadesSpinner.setEnabled(true);
         restoreOriginal.setEnabled(true);
