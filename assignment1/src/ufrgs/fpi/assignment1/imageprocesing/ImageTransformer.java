@@ -81,7 +81,7 @@ public class ImageTransformer {
             for (int j = 0; j < originalImage.getHeight(); j++) {
                 int luminance = new FPIColor(originalImage.getRGB(i, j)).paintItGray().getRed();
                 int quantizedLuminance = getQuantizedLuminance(shades, luminance);
-                resultImage.setRGB(i, j, new Color(quantizedLuminance, quantizedLuminance, quantizedLuminance).getRGB());
+                resultImage.setRGB(i, j, getRgb(quantizedLuminance, quantizedLuminance, quantizedLuminance));
             }
         }
 
@@ -102,7 +102,7 @@ public class ImageTransformer {
         return new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
     }
 
-    private static int[] calculateHistogram(BufferedImage image) {
+    public static int[] calculateHistogram(BufferedImage image) {
         int[] histogram = new int[256];
         Arrays.fill(histogram, 0);
 
@@ -132,6 +132,50 @@ public class ImageTransformer {
         return makeImageFromHistogramArray(histogram);
     }
 
+    public static BufferedImage histogramEqualization(BufferedImage originalImage) {
+        BufferedImage resultImage = getSizedImageForTransformation(originalImage);
+
+        int[] histogram = calculateHistogram(originalImage);
+        int[] cumulativeHistogram = calculateCumulativeHistogram(histogram, originalImage);
+
+        for (int i = 0; i < originalImage.getWidth(); i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                int red = cumulativeHistogram[getRed(originalImage, i, j)];
+                int green = cumulativeHistogram[getGreen(originalImage, i, j)];
+                int blue = cumulativeHistogram[getBlue(originalImage, i, j)];
+
+                resultImage.setRGB(i, j, getRgb(red, green, blue));
+            }
+        }
+
+        return resultImage;
+    }
+
+    public static int[] calculateCumulativeHistogram(int[] histogram, BufferedImage image) {
+        int[] cumulativeHistogram = new int[256];
+        cumulativeHistogram[0] = histogram[0];
+
+        for (int i = 1; i < 256; i++) {
+            cumulativeHistogram[i] = cumulativeHistogram[i - 1] + histogram[i];
+        }
+
+        double alpha = getAlphaFactor(image);
+
+        for (int i = 0; i < 256; i++) {
+            cumulativeHistogram[i] = (int) (alpha * cumulativeHistogram[i]);
+        }
+
+        return cumulativeHistogram;
+    }
+
+    private static int pixelsInImage(BufferedImage image) {
+        return image.getHeight() * image.getWidth();
+    }
+
+    private static double getAlphaFactor(BufferedImage image) {
+        return 255.0 / pixelsInImage(image);
+    }
+
     private static int getMaximum(int[] array) {
         int max = 0;
 
@@ -142,7 +186,7 @@ public class ImageTransformer {
         return max;
     }
 
-    private static BufferedImage makeImageFromHistogramArray(int[] histogram) {
+    public static BufferedImage makeImageFromHistogramArray(int[] histogram) {
         BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
 
         for (int i = 0; i < 256; i++) {
@@ -162,24 +206,99 @@ public class ImageTransformer {
     public static BufferedImage brightEnhancement(BufferedImage originalImage, int bright) {
         BufferedImage resultImage = getSizedImageForTransformation(originalImage);
 
-        //fixme this is not working, always makes the picture black. need to figure out why
-
         for (int i = 0; i < originalImage.getWidth(); i++) {
             for (int j = 0; j < originalImage.getHeight(); j++) {
-                Color originalColor = new FPIColor(resultImage.getRGB(i, j)).paintItGray();
-                int enhancedLuminance = originalColor.getGreen() + bright;
+                int red = getRed(originalImage, i, j) + bright;
+                int green = getGreen(originalImage, i, j) + bright;
+                int blue = getBlue(originalImage, i, j) + bright;
 
-                if(enhancedLuminance > 255) {
-                    enhancedLuminance = 255;
-                }
-                else if (enhancedLuminance < 0) {
-                    enhancedLuminance = 0;
-                }
-
-                resultImage.setRGB(i, j, new Color(enhancedLuminance, enhancedLuminance, enhancedLuminance).getRGB());
+                resultImage.setRGB(i, j, getRgb(red, green, blue));
             }
         }
 
         return resultImage;
+    }
+
+    public static BufferedImage contrastAdjust(BufferedImage originalImage, int contrast) {
+        BufferedImage resultImage = getSizedImageForTransformation(originalImage);
+
+        for (int i = 0; i < originalImage.getWidth(); i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                int red = getRed(originalImage, i, j) * contrast;
+                int green = getGreen(originalImage, i, j) * contrast;
+                int blue = getBlue(originalImage, i, j) * contrast;
+
+                resultImage.setRGB(i, j, getRgb(red, green, blue));
+            }
+        }
+
+        return resultImage;
+    }
+
+    public static BufferedImage negative(BufferedImage originalImage) {
+        BufferedImage resultImage = getSizedImageForTransformation(originalImage);
+
+        for (int i = 0; i < originalImage.getWidth(); i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                int red = 255 - getRed(originalImage, i, j);
+                int green = 255 - getGreen(originalImage, i, j);
+                int blue = 255 - getBlue(originalImage, i, j);
+
+                resultImage.setRGB(i, j, getRgb(red, green, blue));
+            }
+        }
+
+        return resultImage;
+    }
+
+    public static BufferedImage rotateMinus90(BufferedImage originalImage) {
+        int width = originalImage.getWidth();
+        BufferedImage resultImage = new BufferedImage(originalImage.getHeight(), width, BufferedImage.TYPE_INT_RGB);
+
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < originalImage.getHeight(); j++) {
+                int destRgb = originalImage.getRGB(i, j);
+                resultImage.setRGB(j, width - i - 1, destRgb);
+            }
+        }
+
+        return resultImage;
+    }
+
+    public static BufferedImage rotatePlus90(BufferedImage originalImage) {
+        return rotateMinus90(rotateMinus90(rotateMinus90(originalImage)));
+    }
+
+
+        private static int getRed(BufferedImage image, int i, int j) {
+        int rgb = image.getRGB(i, j);
+        return new Color(rgb).getRed();
+    }
+
+    private static int getGreen(BufferedImage image, int i, int j) {
+        int rgb = image.getRGB(i, j);
+        return new Color(rgb).getGreen();
+    }
+
+    private static int getBlue(BufferedImage image, int i, int j) {
+        int rgb = image.getRGB(i, j);
+        return new Color(rgb).getBlue();
+    }
+
+    private static int getRgb(int red, int green, int blue) {
+        return new Color(truncateToPixelRange(red), truncateToPixelRange(green), truncateToPixelRange(blue)).getRGB();
+    }
+
+    private static int truncateToMaxPixelValue(int value) {
+        return value > 255 ? 255 : value;
+    }
+
+    private static int truncateToMinPixelValue(int value) {
+        return value < 0 ? 0 : value;
+    }
+
+    private static int truncateToPixelRange(int value) {
+        return truncateToMaxPixelValue(truncateToMinPixelValue(value));
     }
 }

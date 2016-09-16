@@ -1,6 +1,5 @@
 package ufrgs.fpi.assignment1.gui;
 
-import ufrgs.fpi.assignment1.imageprocesing.ImageTransformer;
 import ufrgs.fpi.assignment1.imageprocesing.JPEGHandler;
 
 import javax.swing.*;
@@ -13,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static javax.swing.JOptionPane.*;
+import static ufrgs.fpi.assignment1.imageprocesing.ImageTransformer.*;
 
 class Main extends JFrame {
     private static final int WIDTH = 1200;
@@ -20,9 +20,10 @@ class Main extends JFrame {
     private static final int PICTURE_PANE_WIDTH = (int) (WIDTH * 0.425);
     private static final int BUTTONS_PANE_WIDTH = (int) (WIDTH * 0.15);
 
-    private JPanel originalImagePanel, resultImagePanel, buttonsPanel;
+    private JPanel originalImagePanel, resultImagePanel, part1ButtonsPanel, part2ButtonsPanel;
     private JButton uploadImageButton, verticalMirrorButton, horizontalMirrorButton, grayscaleButton, quantizationButton, restoreOriginal, saveButton;
-    private JSpinner shadesSpinner;
+    private JButton histogramButton, brightAdjustButton, contrastAdjustButton, negativeButton, equalizedHistogramButton, zoomOutButton, zoomInButton, rotationPlusButton, rotationMinusButton, convolutionButton;
+    private JSpinner shadesSpinner, brightSpinner, contrastSpinner;
     private JLabel originalImageJLabel, resultImageJLabel;
     private BufferedImage originalImage, resultImage;
 
@@ -43,7 +44,7 @@ class Main extends JFrame {
     private void createContentPanels() {
         createOriginalImagePanel();
         createModifiedImagePanel();
-        createButtonsPanel();
+        createButtonsPanels();
         addOnClickHandlersToButtons();
     }
 
@@ -61,22 +62,40 @@ class Main extends JFrame {
         resultImagePanel.setMinimumSize(new Dimension(PICTURE_PANE_WIDTH, HEIGHT));
     }
 
-    private void createButtonsPanel() {
-        buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new FlowLayout());
+    private void createButtonsPanels() {
+        part1ButtonsPanel = new JPanel();
+        part1ButtonsPanel.setLayout(new FlowLayout());
+
+        part2ButtonsPanel = new JPanel();
+        part2ButtonsPanel.setLayout(new FlowLayout());
 
         initShadesSpinner();
+        initContrastSpinner();
+        initBrightSpinner();
         initButtons();
         disableButtons();
-        addButtonsToPanel();
+        addButtonsToPanels();
 
-        buttonsPanel.setPreferredSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
-        buttonsPanel.setMinimumSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+        part1ButtonsPanel.setPreferredSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+        part1ButtonsPanel.setMinimumSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+
+        part2ButtonsPanel.setPreferredSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
+        part2ButtonsPanel.setMinimumSize(new Dimension(BUTTONS_PANE_WIDTH, HEIGHT));
     }
 
     private void initShadesSpinner() {
         shadesSpinner = new JSpinner(buildSpinnerListModel(1, 255));
         setShadesSpinnerSize();
+    }
+
+    private void initBrightSpinner() {
+        brightSpinner = new JSpinner(buildSpinnerListModel(-255, 255));
+        setBrightSpinnerSize();
+    }
+
+    private void initContrastSpinner() {
+        contrastSpinner = new JSpinner(buildSpinnerListModel(1, 255));
+        setContrastSpinnerSize();
     }
 
     private SpinnerListModel buildSpinnerListModel(int min, int max) {
@@ -90,6 +109,18 @@ class Main extends JFrame {
         textField.setColumns(3);
     }
 
+    private void setBrightSpinnerSize() {
+        Component spinnerEditor = brightSpinner.getEditor();
+        JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
+        textField.setColumns(3);
+    }
+
+    private void setContrastSpinnerSize() {
+        Component spinnerEditor = contrastSpinner.getEditor();
+        JFormattedTextField textField = ((JSpinner.DefaultEditor) spinnerEditor).getTextField();
+        textField.setColumns(3);
+    }
+
     private void initButtons() {
         uploadImageButton = new JButton("Upload de imagem");
         verticalMirrorButton = new JButton("Espelhamento vertical");
@@ -98,6 +129,17 @@ class Main extends JFrame {
         quantizationButton = new JButton("Quantização");
         restoreOriginal = new JButton("Restaurar original");
         saveButton = new JButton("Salvar resultado");
+
+        histogramButton = new JButton("  Histograma  ");
+        brightAdjustButton = new JButton("Brilho");
+        contrastAdjustButton = new JButton("Contraste");
+        negativeButton = new JButton("Negativo");
+        equalizedHistogramButton = new JButton("Histograma equalizado");
+        zoomOutButton = new JButton("Zoom out");
+        zoomInButton = new JButton("Zoom in");
+        rotationPlusButton = new JButton("Rotação +90°");
+        rotationMinusButton = new JButton("Rotação -90°");
+        convolutionButton = new JButton("Convolução");
     }
 
     private void disableButtons() {
@@ -108,17 +150,43 @@ class Main extends JFrame {
         shadesSpinner.setEnabled(false);
         restoreOriginal.setEnabled(false);
         saveButton.setEnabled(false);
+
+        histogramButton.setEnabled(false);
+        brightAdjustButton.setEnabled(false);
+        brightSpinner.setEnabled(false);
+        contrastAdjustButton.setEnabled(false);
+        contrastSpinner.setEnabled(false);
+        negativeButton.setEnabled(false);
+        equalizedHistogramButton.setEnabled(false);
+        zoomOutButton.setEnabled(false);
+        zoomInButton.setEnabled(false);
+        rotationPlusButton.setEnabled(false);
+        rotationMinusButton.setEnabled(false);
+        convolutionButton.setEnabled(false);
     }
 
-    private void addButtonsToPanel() {
-        buttonsPanel.add(uploadImageButton);
-        buttonsPanel.add(verticalMirrorButton);
-        buttonsPanel.add(horizontalMirrorButton);
-        buttonsPanel.add(grayscaleButton);
-        buttonsPanel.add(quantizationButton);
-        buttonsPanel.add(shadesSpinner);
-        buttonsPanel.add(restoreOriginal);
-        buttonsPanel.add(saveButton);
+    private void addButtonsToPanels() {
+        part1ButtonsPanel.add(uploadImageButton);
+        part1ButtonsPanel.add(verticalMirrorButton);
+        part1ButtonsPanel.add(horizontalMirrorButton);
+        part1ButtonsPanel.add(grayscaleButton);
+        part1ButtonsPanel.add(quantizationButton);
+        part1ButtonsPanel.add(shadesSpinner);
+        part1ButtonsPanel.add(restoreOriginal);
+        part1ButtonsPanel.add(saveButton);
+
+        part2ButtonsPanel.add(histogramButton);
+        part2ButtonsPanel.add(brightAdjustButton);
+        part2ButtonsPanel.add(brightSpinner);
+        part2ButtonsPanel.add(contrastAdjustButton);
+        part2ButtonsPanel.add(contrastSpinner);
+        part2ButtonsPanel.add(negativeButton);
+        part2ButtonsPanel.add(equalizedHistogramButton);
+        part2ButtonsPanel.add(zoomOutButton);
+        part2ButtonsPanel.add(zoomInButton);
+        part2ButtonsPanel.add(rotationPlusButton);
+        part2ButtonsPanel.add(rotationMinusButton);
+        part2ButtonsPanel.add(convolutionButton);
     }
 
     private void addOnClickHandlersToButtons() {
@@ -131,10 +199,16 @@ class Main extends JFrame {
         addRestoreOriginalButtonOnClick();
         addSaveButtonOnClick();
 
-        //todo add other new onClick handlers
-        //fixme
-/*        addHistogramButtonOnClick();
-        addBrightEnhancementOnClick();*/
+        addHistogramButtonOnClick();
+        addBrightAdjustButtonOnClick();
+        addContrastAdjustButtonOnClick();
+        addNegativeButtonOnClick();
+        addEqualizedHistogramButtonOnClick();
+        addZoomOutButtonOnClick();
+        addZoomInButtonOnClick();
+        addRotationPlusButtonOnClick();
+        addRotationMinusButtonOnClick();
+        addConvolutionButtonOnClick();
     }
 
     private void addUploadImageButtonOnClick() {
@@ -161,7 +235,7 @@ class Main extends JFrame {
     private void addVerticalMirrorButtonOnClick() {
         verticalMirrorButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.mirrorVertically(resultImage);
+                resultImage = mirrorVertically(resultImage);
                 refreshResultImagePanel();
 
             }
@@ -171,34 +245,154 @@ class Main extends JFrame {
     private void addHorizontalMirrorButtonOnClick() {
         horizontalMirrorButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.mirrorHorizontally(resultImage);
+                resultImage = mirrorHorizontally(resultImage);
                 refreshResultImagePanel();
             }
         });
     }
 
-//FIXME
-/*    private void addHistogramButtonOnClick() {
-        histogramButton.addActionListener(e -> {
-            resultImage = ImageTransformer.getHistogramAsImage(originalImage);
-            refreshResultImagePanel();
-        });
-    }*/
-
-    //FIXME
-/*    private void addBrightEnhancementOnClick() {
-        brightEnhancementButton.addActionListener(e -> {
+    private void addConvolutionButtonOnClick() {
+        convolutionButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.brightEnhancement(resultImage, (Integer) shadesSpinner.getValue());
+                //todo
                 refreshResultImagePanel();
             }
         });
-    }*/
+    }
+
+    private void addRotationPlusButtonOnClick() {
+        rotationPlusButton.addActionListener(e -> {
+            if (resultImage != null) {
+                resultImage = rotatePlus90(resultImage);
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addRotationMinusButtonOnClick() {
+        rotationMinusButton.addActionListener(e -> {
+            if (resultImage != null) {
+                resultImage = rotateMinus90(resultImage);
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addZoomInButtonOnClick() {
+        zoomInButton.addActionListener(e -> {
+            if (resultImage != null) {
+                //todo
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addZoomOutButtonOnClick() {
+        zoomOutButton.addActionListener(e -> {
+            if (resultImage != null) {
+                //todo
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addEqualizedHistogramButtonOnClick() {
+        equalizedHistogramButton.addActionListener(e -> {
+            if (resultImage != null) {
+                BufferedImage histogram = getHistogramAsImage(resultImage);
+                BufferedImage equalizedImage = histogramEqualization(resultImage);
+                BufferedImage equalizedHistogram = getHistogramAsImage(equalizedImage);
+
+                showHistogramsPopup(resultImage, histogram, equalizedHistogram, equalizedImage);
+
+                resultImage = equalizedImage;
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void showHistogramsPopup(BufferedImage originalImage, BufferedImage histogram, BufferedImage equalizedHistogram, BufferedImage equalizedImage) {
+        JLabel originalImageLabel = new JLabel(new ImageIcon(originalImage));
+        JLabel histogramLabel = new JLabel(new ImageIcon(histogram));
+        JLabel equalizedImageLabel = new JLabel(new ImageIcon(equalizedImage));
+        JLabel equalizedHistogramLabel = new JLabel(new ImageIcon(equalizedHistogram));
+
+        JPanel popupRoot = new JPanel();
+        JPanel popupBottom = new JPanel();
+        JPanel popupBottomRight = new JPanel();
+        JPanel popupBottomLeft = new JPanel();
+        JPanel popupTop = new JPanel();
+        JPanel popupTopRight = new JPanel();
+        JPanel popupTopLeft = new JPanel();
+
+        popupTopRight.add(originalImageLabel);
+        popupTopLeft.add(histogramLabel);
+        popupBottomRight.add(equalizedImageLabel);
+        popupBottomLeft.add(equalizedHistogramLabel);
+
+        JSplitPane popupHorizontalSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane popupVerticalTopSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JSplitPane popupVerticalBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+
+        popupRoot.add(popupHorizontalSplit, BorderLayout.CENTER);
+        popupHorizontalSplit.setTopComponent(popupTop);
+        popupHorizontalSplit.setBottomComponent(popupBottom);
+
+        popupBottom.add(popupVerticalBottomSplit);
+        popupVerticalBottomSplit.setRightComponent(popupBottomRight);
+        popupVerticalBottomSplit.setLeftComponent(popupBottomLeft);
+
+        popupTop.add(popupVerticalTopSplit);
+        popupVerticalTopSplit.setRightComponent(popupTopRight);
+        popupVerticalTopSplit.setLeftComponent(popupTopLeft);
+
+        JOptionPane.showMessageDialog(null, popupRoot, "Histogramas", JOptionPane.PLAIN_MESSAGE, null);
+    }
+
+    private void addNegativeButtonOnClick() {
+        negativeButton.addActionListener(e -> {
+            if (resultImage != null) {
+                resultImage = negative(resultImage);
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addContrastAdjustButtonOnClick() {
+        contrastAdjustButton.addActionListener(e -> {
+            if (resultImage != null) {
+                resultImage = contrastAdjust(resultImage, (Integer) contrastSpinner.getValue());
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addBrightAdjustButtonOnClick() {
+        brightAdjustButton.addActionListener(e -> {
+            if (resultImage != null) {
+                resultImage = brightEnhancement(resultImage, (Integer) brightSpinner.getValue());
+                refreshResultImagePanel();
+            }
+        });
+    }
+
+    private void addHistogramButtonOnClick() {
+        histogramButton.addActionListener(e -> {
+            BufferedImage histogram = getHistogramAsImage(resultImage);
+
+            JLabel histogramLabel = new JLabel(new ImageIcon(histogram));
+
+            JPanel popupRoot = new JPanel();
+            popupRoot.add(histogramLabel, BorderLayout.CENTER);
+
+            JOptionPane.showMessageDialog(null, popupRoot, "Histograma", JOptionPane.PLAIN_MESSAGE, null);
+        });
+    }
 
     private void addGrayscaleButtonOnClick() {
         grayscaleButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.convertToGrayscale(resultImage);
+                resultImage = convertToGrayscale(resultImage);
                 refreshResultImagePanel();
             }
         });
@@ -207,7 +401,7 @@ class Main extends JFrame {
     private void addQuantizationButtonOnClick() {
         quantizationButton.addActionListener(e -> {
             if (resultImage != null) {
-                resultImage = ImageTransformer.quantizeImage(resultImage, (Integer) shadesSpinner.getValue());
+                resultImage = quantizeImage(resultImage, (Integer) shadesSpinner.getValue());
                 refreshResultImagePanel();
             }
         });
@@ -251,6 +445,19 @@ class Main extends JFrame {
         shadesSpinner.setEnabled(true);
         restoreOriginal.setEnabled(true);
         saveButton.setEnabled(true);
+
+        histogramButton.setEnabled(true);
+        brightAdjustButton.setEnabled(true);
+        brightSpinner.setEnabled(true);
+        contrastAdjustButton.setEnabled(true);
+        contrastSpinner.setEnabled(true);
+        negativeButton.setEnabled(true);
+        equalizedHistogramButton.setEnabled(true);
+        zoomOutButton.setEnabled(true);
+        zoomInButton.setEnabled(true);
+        rotationPlusButton.setEnabled(true);
+        rotationMinusButton.setEnabled(true);
+        convolutionButton.setEnabled(true);
     }
 
     private void refreshOriginalImagePanel() {
@@ -277,18 +484,23 @@ class Main extends JFrame {
 
     private void createSplitterPanes(JPanel topPanel) {
         JSplitPane splitPaneLeft = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane splitPaneMiddle = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane splitPaneRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+
         topPanel.add(splitPaneLeft, BorderLayout.CENTER);
 
-        JSplitPane splitPaneRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPaneRight.setLeftComponent(originalImagePanel);
         splitPaneRight.setRightComponent(resultImagePanel);
 
-        splitPaneLeft.setLeftComponent(splitPaneRight);
-        splitPaneLeft.setRightComponent(buttonsPanel);
+        splitPaneMiddle.setLeftComponent(splitPaneRight);
+        splitPaneMiddle.setRightComponent(part1ButtonsPanel);
+
+        splitPaneLeft.setLeftComponent(splitPaneMiddle);
+        splitPaneLeft.setRightComponent(part2ButtonsPanel);
     }
 
     private void setMainWindowProperties() {
-        setTitle("Assignment number one");
+        setTitle("Assignment number two");
         setBackground(Color.gray);
         setSize(WIDTH, HEIGHT);
         pack();
